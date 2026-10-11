@@ -1,0 +1,46 @@
+# Render Blueprint for the FlowSync API (free web service).
+# Dashboard → New → Blueprint → pick this repo. Secrets marked `sync: false`
+# are prompted for on first deploy; see README "Deploy".
+services:
+  - type: web
+    name: flowsync-api
+    runtime: node
+    plan: free
+    # Keep Neon and Upstash in the same region for the lowest latency.
+    region: frankfurt
+    branch: main
+    autoDeploy: true
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --filter @flowsync/api... && pnpm --filter @flowsync/api build
+    # Apply pending migrations on every boot, then start (no pnpm needed at runtime).
+    startCommand: cd apps/api && node_modules/.bin/prisma migrate deploy && node --enable-source-maps dist/index.js
+    healthCheckPath: /health
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/shared/**
+        - pnpm-lock.yaml
+        - render.yaml
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: NODE_ENV
+        value: production
+      # Neon pooled connection string (host contains "-pooler").
+      - key: DATABASE_URL
+        sync: false
+      # Neon direct connection string (no "-pooler"), used by migrations.
+      - key: DIRECT_URL
+        sync: false
+      # Upstash: rediss://default:<password>@<host>:6379
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://flowsync.temitopeagbola.com
+      - key: DEMO_ENABLED
+        value: 'true'
+      - key: DEMO_RESET_HOURS
+        value: '6'
+      - key: LOG_LEVEL
+        value: info
