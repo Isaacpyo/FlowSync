@@ -1,7 +1,33 @@
+# Netlify build for the existing FlowSync site (flowsync.temitopeagbola.com).
+#
+# The base is the repository root because the frontend lives in a pnpm
+# workspace: Netlify finds pnpm-lock.yaml there, installs with pnpm (version
+# from package.json#packageManager), then builds apps/web, which imports the
+# shared workspace package.
 [build]
-  base = "frontend"
-  command = "npm run build"
-  publish = ".next"
+  base = "/"
+  command = "pnpm --filter @flowsync/web build"
+  publish = "apps/web/dist"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+[build.environment]
+  NODE_VERSION = "22"
+  # VITE_API_URL (the Render API URL) is set in the Netlify UI:
+  # Site configuration → Environment variables.
+
+# Single-page app: let the client router handle every path.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"

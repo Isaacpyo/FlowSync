@@ -1,0 +1,72 @@
+# Whole FlowSync stack locally: `docker compose up --build`
+#   web      http://localhost:8080
+#   api      http://localhost:4000
+#   postgres localhost:5433 (postgres/postgres, db "flowsync")
+#   redis    localhost:6380
+# Non-default host ports for Postgres/Redis avoid clashing with local installs.
+name: flowsync
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: flowsync
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d flowsync']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6380:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: '4000'
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flowsync
+      DIRECT_URL: postgresql://postgres:postgres@postgres:5432/flowsync
+      REDIS_URL: redis://redis:6379
+      # Local-only default; override with JWT_SECRET in your shell or a .env file.
+      JWT_SECRET: ${JWT_SECRET:-local-docker-only-secret-0123456789abcdefghij}
+      CORS_ORIGIN: http://localhost:8080,http://localhost:5173
+      DEMO_ENABLED: 'true'
+      DEMO_RESET_HOURS: '6'
+      LOG_LEVEL: info
+    ports:
+      - '4000:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:4000
+    ports:
+      - '8080:80'
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

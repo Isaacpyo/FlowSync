@@ -1,0 +1,35 @@
+{
+  "name": "flowsync",
+  "private": true,
+  "description": "FlowSync — real-time collaborative task management. Where teams flow together.",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @flowsync/api --filter @flowsync/web dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "e2e": "pnpm --filter @flowsync/web e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @flowsync/api db:generate",
+    "db:migrate": "pnpm --filter @flowsync/api db:migrate",
+    "db:deploy": "pnpm --filter @flowsync/api db:deploy",
+    "db:seed": "pnpm --filter @flowsync/api db:seed",
+    "bench:latency": "pnpm --filter @flowsync/api bench:latency"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.1"
+  }
+}
