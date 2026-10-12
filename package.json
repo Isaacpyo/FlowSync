@@ -18,6 +18,7 @@
     "format:check": "prettier --check .",
     "db:generate": "pnpm --filter @flowsync/api db:generate",
     "db:migrate": "pnpm --filter @flowsync/api db:migrate",
+    "db:deploy": "pnpm --filter @flowsync/api db:deploy",
     "db:seed": "pnpm --filter @flowsync/api db:seed",
     "bench:latency": "pnpm --filter @flowsync/api bench:latency"
   },
