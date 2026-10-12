@@ -2,11 +2,16 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
-// A Netlify build without the API URL would ship a bundle that calls
-// localhost; fail loudly instead.
+// A Netlify build without the API URL ships a bundle that calls localhost.
+// Fail the production deploy (the live site keeps its previous version);
+// previews and branch deploys still build, with a warning, so pull requests
+// aren't blocked before the API exists.
 if (process.env.NETLIFY === 'true' && !process.env.VITE_API_URL) {
-  throw new Error(
-    'VITE_API_URL is not set. Add it under Site configuration → Environment variables.',
+  const message =
+    'VITE_API_URL is not set. Add it under Site configuration → Environment variables.';
+  if (process.env.CONTEXT === 'production') throw new Error(message);
+  console.warn(
+    `Warning: ${message} This ${process.env.CONTEXT ?? 'non-production'} build will call http://localhost:4000.`,
   );
 }
 
